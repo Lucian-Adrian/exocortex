@@ -1,9 +1,61 @@
+# Exo Docker Compose Configuration
+# For local development and testing
+
 version: '3.8'
 
 services:
-  app:
-    build: .
+  # Exo API Service
+  exo-api:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile
+    container_name: exo-api
     ports:
-      - "4000:80"
+      - "8000:8000"
+    environment:
+      # Required: Supabase connection
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      # Required: Gemini API
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Optional: API authentication
+      - EXO_API_KEY=${EXO_API_KEY:-dev-key}
+      # Optional: Model selection
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash-lite}
+      # Optional: Langfuse tracing
+      - EXO_ENABLE_TRACING=${EXO_ENABLE_TRACING:-false}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
     volumes:
-      - .:/app
+      # Mount source for hot-reload during development
+      - ../exo:/app/exo:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Development API with hot-reload
+  exo-dev:
+    build:
+      context: ..
+      dockerfile: config/Dockerfile
+    container_name: exo-dev
+    ports:
+      - "8001:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - EXO_API_KEY=${EXO_API_KEY:-dev-key}
+    volumes:
+      - ../exo:/app/exo
+    command: ["uvicorn", "exo.api.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    profiles:
+      - dev
+
+# Usage:
+#   Production: docker compose up exo-api
+#   Development: docker compose --profile dev up exo-dev
