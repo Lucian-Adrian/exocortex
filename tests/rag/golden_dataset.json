@@ -1,0 +1,117 @@
+{
+  "name": "Exo RAG Golden Dataset",
+  "description": "Test cases for evaluating RAG pipeline quality",
+  "version": "1.0",
+  "test_cases": [
+    {
+      "id": "tc-001",
+      "query": "What are the key features of the Exo knowledge management system?",
+      "expected_answer": "Exo is an Executive OS for knowledge management with key features including: automatic ingestion from multiple sources (markdown, URLs, Slack), AI-powered summarization and entity extraction, semantic search across all memories, commitment tracking, and integration with LangChain and n8n for automation.",
+      "context": [
+        "Exo is an Executive OS - a personal knowledge memory system.",
+        "It supports ingestion from multiple sources including markdown files, URLs, and Slack messages.",
+        "The system uses AI to summarize content and extract entities like people, organizations, and commitments.",
+        "Semantic search allows querying across all stored memories using natural language.",
+        "Exo integrates with LangChain for RAG pipelines and n8n for automation workflows."
+      ],
+      "tags": ["product", "features"]
+    },
+    {
+      "id": "tc-002",
+      "query": "How does commitment tracking work in Exo?",
+      "expected_answer": "Exo automatically extracts commitments from ingested content. Each commitment includes who made it, what was promised, to whom, when it's due, and its current status (pending, completed, or cancelled). Users can query pending commitments and get reminders about upcoming deadlines.",
+      "context": [
+        "Commitments are extracted automatically from ingested content using AI.",
+        "Each commitment has fields: from_person, to_person, what, due_date, and status.",
+        "Commitment status can be: pending, completed, or cancelled.",
+        "Users can search for commitments by person, date, or keyword.",
+        "The system can filter commitments by status to show only pending items."
+      ],
+      "tags": ["commitments", "tracking"]
+    },
+    {
+      "id": "tc-003",
+      "query": "What embedding model does Exo use for semantic search?",
+      "expected_answer": "Exo uses Google's text-embedding-004 model for generating vector embeddings. These embeddings enable semantic search by converting text into high-dimensional vectors that capture meaning, allowing the system to find relevant content even when exact keywords don't match.",
+      "context": [
+        "Exo uses the Gemini API for AI capabilities.",
+        "The embedding model is text-embedding-004 from Google.",
+        "Embeddings are stored in Supabase with pgvector extension.",
+        "Semantic search uses cosine similarity to find relevant memories.",
+        "The default similarity threshold is 0.7 for search results."
+      ],
+      "tags": ["embeddings", "search", "technical"]
+    },
+    {
+      "id": "tc-004",
+      "query": "How can I ingest content into Exo via the API?",
+      "expected_answer": "You can ingest content via POST /api/memories with a JSON body containing: text (the content), source_type (markdown, url, slack, or transcript), and optional source_url. The API requires authentication via X-API-Key header. The response includes the created memory ID, generated summary, and extracted entities.",
+      "context": [
+        "The REST API runs on FastAPI with uvicorn.",
+        "POST /api/memories is the ingest endpoint.",
+        "Required fields: text and source_type.",
+        "source_type must be one of: markdown, url, slack, transcript.",
+        "Authentication uses X-API-Key header checked against EXO_API_KEY env var.",
+        "Response includes: id, summary, entities, commitments."
+      ],
+      "tags": ["api", "ingest"]
+    },
+    {
+      "id": "tc-005",
+      "query": "What is the difference between semantic search and keyword search in Exo?",
+      "expected_answer": "Semantic search in Exo uses AI embeddings to find content based on meaning, not just exact word matches. This means a query about 'revenue growth' can find documents discussing 'sales increase' or 'profit improvement'. Keyword search would only match exact terms. Semantic search returns results ranked by similarity score.",
+      "context": [
+        "Exo uses vector embeddings for semantic search.",
+        "Semantic search compares meaning rather than exact words.",
+        "Similarity scores range from 0.0 to 1.0.",
+        "Results are filtered by a configurable similarity threshold.",
+        "The system can understand synonyms and related concepts.",
+        "top_k parameter controls how many results to return."
+      ],
+      "tags": ["search", "semantic"]
+    },
+    {
+      "id": "tc-006",
+      "query": "How do I set up Exo for local development?",
+      "expected_answer": "To set up Exo locally: 1) Clone the repository, 2) Install dependencies with pip install -e '.[dev]', 3) Create a .env file with SUPABASE_URL, SUPABASE_KEY, and GEMINI_API_KEY, 4) Run tests with pytest, 5) Start the API server with uvicorn exo.api.app:app. The CLI is available via the 'exo' command.",
+      "context": [
+        "Exo requires Python 3.13 or higher.",
+        "Install with: pip install -e '.[dev]' for development.",
+        "Required environment variables: SUPABASE_URL, SUPABASE_KEY, GEMINI_API_KEY.",
+        "Optional: EXO_API_KEY for API authentication.",
+        "Run tests with: pytest tests/unit/ -v",
+        "Start API: uvicorn exo.api.app:app --reload",
+        "CLI available after install: exo --help"
+      ],
+      "tags": ["setup", "development"]
+    },
+    {
+      "id": "tc-007",
+      "query": "What sources can Exo ingest content from?",
+      "expected_answer": "Exo can ingest content from four source types: 1) Markdown files - for notes and documentation, 2) URLs - for web pages and articles, 3) Slack messages - for team communications, and 4) Transcripts - for meeting notes and recordings. Each source type is processed and enriched with AI-generated summaries and entity extraction.",
+      "context": [
+        "SourceType enum defines: MARKDOWN, URL, SLACK, TRANSCRIPT.",
+        "Markdown source is for local notes and documentation.",
+        "URL source fetches and processes web content.",
+        "Slack source handles team message ingestion.",
+        "Transcript source is for meeting notes and audio transcriptions.",
+        "All sources go through the same enrichment pipeline."
+      ],
+      "tags": ["sources", "ingest"]
+    },
+    {
+      "id": "tc-008",
+      "query": "How does Exo integrate with n8n for automation?",
+      "expected_answer": "Exo provides n8n-compatible webhook endpoints at /webhook/ingest and /webhook/query. The n8n helpers format responses in a structure n8n can easily parse, including success status, data, count, and timestamp fields. You can import the example workflow to connect Exo with other services like Slack, email, or Notion.",
+      "context": [
+        "Webhook endpoints: POST /webhook/ingest and POST /webhook/query.",
+        "format_n8n_response() creates n8n-compatible response format.",
+        "Response includes: success, data, count, timestamp, metadata.",
+        "validate_n8n_webhook() checks incoming payload structure.",
+        "Example workflow available in docs/examples/n8n_workflow.json.",
+        "n8n can trigger ingestion based on Slack messages or emails."
+      ],
+      "tags": ["n8n", "integration", "automation"]
+    }
+  ]
+}
