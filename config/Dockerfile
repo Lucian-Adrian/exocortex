@@ -1,20 +1,51 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Exo API Dockerfile
+# Multi-stage build for smaller production image
 
-# Set the working directory in the container
+# Build stage
+FROM python:3.13-slim AS builder
+
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-# Make port 80 available to the world outside this container
-EXPOSE 80
+# Install Python dependencies
+COPY pyproject.toml .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -e ".[api]"
 
-# Define environment variable
-ENV NAME World
+# Production stage
+FROM python:3.13-slim AS production
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+WORKDIR /app
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy application code
+COPY exo/ ./exo/
+COPY pyproject.toml .
+
+# Install the package
+RUN pip install --no-cache-dir -e .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash exo
+USER exo
+
+# Expose API port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')" || exit 1
+
+# Run the API with uvicorn
+CMD ["uvicorn", "exo.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
