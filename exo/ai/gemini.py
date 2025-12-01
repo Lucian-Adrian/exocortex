@@ -109,7 +109,9 @@ class GeminiProvider(AIProvider, EmbeddingProvider):
 
         Uses JSON output mode to ensure valid schema.
         """
-        prompt = f"""Analyze the following text:
+        prompt = f"""{ENRICH_SYSTEM_PROMPT}
+
+Analyze the following text:
 
 {text}"""
 
@@ -132,34 +134,62 @@ class GeminiProvider(AIProvider, EmbeddingProvider):
         text = response.text
         data = json.loads(text)
 
-        # Convert to Pydantic models
-        intents = [Intent(i) for i in data.get("intents", [])]
-        entities = [
-            Entity(
-                name=e["name"],
-                type=e["type"],
-                confidence=e.get("confidence", 0.8),
-                normalized=e.get("normalized"),
-            )
-            for e in data.get("entities", [])
-        ]
-        commitments = [
-            Commitment(
-                from_party=c["from_party"],
-                to_party=c["to_party"],
-                description=c["description"],
-                due_date=c.get("due_date"),
-                status=CommitmentStatus(c.get("status", "open")),
-            )
-            for c in data.get("commitments", [])
-        ]
+        # Convert to Pydantic models with safe defaults
+        intents = [Intent(i) for i in data.get("intents", []) if i in [e.value for e in Intent]]
+        
+        # Handle entities - might be list or dict
+        entities_data = data.get("entities", [])
+        entities = []
+        if isinstance(entities_data, list):
+            for e in entities_data:
+                if isinstance(e, dict) and "name" in e:
+                    entities.append(Entity(
+                        name=e["name"],
+                        type=e.get("type", "unknown"),
+                        confidence=e.get("confidence", 0.8),
+                        normalized=e.get("normalized"),
+                    ))
+        elif isinstance(entities_data, dict):
+            # Handle dict format {type: [names]}
+            for entity_type, names in entities_data.items():
+                if isinstance(names, list):
+                    for name in names:
+                        if isinstance(name, str):
+                            entities.append(Entity(
+                                name=name,
+                                type=entity_type,
+                                confidence=0.8,
+                            ))
+                        elif isinstance(name, dict) and "name" in name:
+                            entities.append(Entity(
+                                name=name["name"],
+                                type=entity_type,
+                                confidence=name.get("confidence", 0.8),
+                                normalized=name.get("normalized"),
+                            ))
+        
+        # Handle commitments
+        commitments_data = data.get("commitments", [])
+        commitments = []
+        for c in commitments_data:
+            if isinstance(c, dict) and all(k in c for k in ["from_party", "to_party", "description"]):
+                commitments.append(Commitment(
+                    from_party=c["from_party"],
+                    to_party=c["to_party"],
+                    description=c["description"],
+                    due_date=c.get("due_date"),
+                    status=CommitmentStatus(c.get("status", "open")) if c.get("status") in ["open", "complete", "overdue"] else CommitmentStatus.OPEN,
+                ))
 
+        # Ensure summary is not empty (required by schema)
+        summary = data.get("summary", "") or "No summary available."
+        
         return EnrichedContent(
             intents=intents,
             confidence=data.get("confidence", 0.8),
             entities=entities,
             commitments=commitments,
-            summary=data.get("summary", ""),
+            summary=summary,
             topics=data.get("topics", []),
         )
 
