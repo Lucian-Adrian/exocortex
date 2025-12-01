@@ -1,0 +1,124 @@
+/* Exocortex Admin Custom Styles */
+
+:root {
+    --primary-color: #8b5cf6;
+    --primary-light: #a78bfa;
+    --primary-dark: #7c3aed;
+}
+
+/* Override Unfold primary colors */
+.dark {
+    --unfold-primary: theme('colors.violet.500');
+    --unfold-primary-dark: theme('colors.violet.600');
+}
+
+/* Custom header styling */
+.sidebar-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+}
+
+/* Card hover effects */
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2);
+}
+
+/* Memory card styling */
+.memory-card {
+    transition: all 0.2s ease;
+}
+
+.memory-card:hover {
+    border-left-color: var(--primary-color);
+}
+
+/* Query input focus */
+.query-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Toast notifications */
+.toast {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Commitment status badges */
+.status-open {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.status-complete {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.status-overdue {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+/* Chart placeholder styling */
+.chart-placeholder {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px dashed #e2e8f0;
+}
+
+/* Scrollbar styling for dark mode */
+.dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Table row animations */
+tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+/* Badge animations */
+.badge {
+    transition: transform 0.15s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
