@@ -101,6 +101,7 @@ class PipelineOrchestrator:
             provider=self._embedder,
             source_type=content.source_type,
             source_file=content.source_file,
+            original_content=content.text,
         )
         if isinstance(memory, ExoError):
             return memory
