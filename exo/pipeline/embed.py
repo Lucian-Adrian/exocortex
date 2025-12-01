@@ -4,6 +4,8 @@ Embed pipeline step.
 Creates vector embeddings and Memory objects.
 """
 
+import hashlib
+
 from exo.ai.base import EmbeddingProvider
 from exo.schemas.content import SourceType
 from exo.schemas.enriched import EnrichedContent
@@ -16,6 +18,7 @@ async def embed(
     provider: EmbeddingProvider,
     source_type: SourceType | str = SourceType.MARKDOWN,
     source_file: str | None = None,
+    original_content: str | None = None,
 ) -> Memory | ExoError:
     """
     Create Memory object with vector embedding.
@@ -86,6 +89,10 @@ async def embed(
         else:
             src_type = source_type
         
+        # Generate content hash for deduplication
+        hash_content = original_content or content.summary
+        content_hash = hashlib.sha256(hash_content.encode()).hexdigest()
+        
         # Create Memory object
         memory = Memory(
             content=content.summary,
@@ -96,6 +103,7 @@ async def embed(
             embedding=embedding,
             source_type=src_type,
             source_file=source_file,
+            content_hash=content_hash,
         )
         
         return memory
