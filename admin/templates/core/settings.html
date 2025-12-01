@@ -1,0 +1,152 @@
+{% extends "layouts/main.html" %}
+
+{% block page_title %}Settings{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-gray-400 mx-2">/</span>
+<span class="text-gray-500">Settings</span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+            <span class="material-symbols-outlined mr-2 text-gray-500">settings</span>
+            Settings
+        </h1>
+        <p class="text-gray-500 mt-1">Configure your Exocortex admin interface.</p>
+    </div>
+
+    <!-- Environment Variables -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Environment Configuration</h3>
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="text-sm text-gray-500 dark:text-gray-400">Supabase URL</label>
+                    <p class="font-mono text-sm text-gray-800 dark:text-white mt-1 truncate">
+                        {{ supabase_url|default:"Not configured" }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="text-sm text-gray-500 dark:text-gray-400">Supabase Key</label>
+                    <p class="font-mono text-sm text-gray-800 dark:text-white mt-1">
+                        {% if supabase_key %}••••••••{{ supabase_key|slice:"-8:" }}{% else %}Not configured{% endif %}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="text-sm text-gray-500 dark:text-gray-400">Gemini API Key</label>
+                    <p class="font-mono text-sm text-gray-800 dark:text-white mt-1">
+                        {% if gemini_key %}••••••••{{ gemini_key|slice:"-8:" }}{% else %}Not configured{% endif %}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="text-sm text-gray-500 dark:text-gray-400">Embed Model</label>
+                    <p class="font-mono text-sm text-gray-800 dark:text-white mt-1">
+                        {{ embed_model|default:"models/text-embedding-004" }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">info</span>
+                    Environment variables are configured in <code class="bg-blue-100 dark:bg-blue-800 px-1 rounded">.env</code> file at project root.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Settings -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Admin Settings</h3>
+        {% if settings %}
+        <div class="space-y-4">
+            {% for setting in settings %}
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                    <p class="font-medium text-gray-800 dark:text-white">{{ setting.key }}</p>
+                    <p class="text-sm text-gray-500">{{ setting.description|default:"No description" }}</p>
+                </div>
+                <div class="font-mono text-sm text-gray-600 dark:text-gray-400">
+                    {{ setting.value }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No custom settings configured.</p>
+        {% endif %}
+    </div>
+
+    <!-- Integrations -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Integration Status</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'integrations:langchain' %}" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🦜</span>
+                    <span class="font-medium text-gray-800 dark:text-white">LangChain</span>
+                </div>
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">Ready</span>
+            </a>
+
+            <a href="{% url 'integrations:n8n' %}" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔗</span>
+                    <span class="font-medium text-gray-800 dark:text-white">n8n Webhooks</span>
+                </div>
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">Ready</span>
+            </a>
+
+            <a href="{% url 'integrations:langfuse' %}" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📊</span>
+                    <span class="font-medium text-gray-800 dark:text-white">Langfuse</span>
+                </div>
+                <span class="px-2 py-1 {% if langfuse_configured %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %} rounded text-sm">
+                    {% if langfuse_configured %}Connected{% else %}Not Configured{% endif %}
+                </span>
+            </a>
+
+            <a href="{% url 'integrations:deepeval' %}" class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🧪</span>
+                    <span class="font-medium text-gray-800 dark:text-white">DeepEval</span>
+                </div>
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">Available</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Quick Links</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="/admin/" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <span class="material-symbols-outlined text-2xl text-gray-500 block mb-2">admin_panel_settings</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">Django Admin</span>
+            </a>
+
+            <a href="http://localhost:8000/docs" target="_blank" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <span class="material-symbols-outlined text-2xl text-gray-500 block mb-2">api</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">API Docs</span>
+            </a>
+
+            <a href="{% url 'logs:list' %}" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <span class="material-symbols-outlined text-2xl text-gray-500 block mb-2">article</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">View Logs</span>
+            </a>
+
+            <a href="{% url 'logs:errors' %}" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <span class="material-symbols-outlined text-2xl text-gray-500 block mb-2">error</span>
+                <span class="text-sm text-gray-700 dark:text-gray-300">View Errors</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
