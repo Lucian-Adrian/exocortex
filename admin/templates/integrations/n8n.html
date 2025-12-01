@@ -1,0 +1,158 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}n8n Webhooks - Exocortex Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">🔗 n8n Webhook Integration</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Connect Exocortex to your n8n automation workflows</p>
+        </div>
+        <a href="https://n8n.io/workflows" target="_blank" 
+           class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            n8n Templates
+        </a>
+    </div>
+
+    <!-- API Base URL -->
+    <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
+        <div class="flex items-center gap-4">
+            <div class="bg-white/20 rounded-lg p-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                </svg>
+            </div>
+            <div>
+                <div class="text-white/80 text-sm">API Base URL</div>
+                <div class="font-mono text-xl">{{ api_base }}</div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('{{ api_base }}')" class="ml-auto px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition">
+                Copy URL
+            </button>
+        </div>
+    </div>
+
+    <!-- Webhook Endpoints -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Available Webhook Endpoints</h2>
+        
+        {% for webhook in webhooks %}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 rounded-lg text-sm font-bold
+                        {% if webhook.method == 'POST' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                        {% elif webhook.method == 'GET' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{% endif %}">
+                        {{ webhook.method }}
+                    </span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ webhook.name }}</span>
+                </div>
+                <code class="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded text-gray-700 dark:text-gray-300">
+                    {{ webhook.endpoint }}
+                </code>
+            </div>
+            <div class="p-4">
+                <p class="text-gray-600 dark:text-gray-400 mb-4">{{ webhook.description }}</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Request Payload</div>
+                        <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs overflow-x-auto">{{ webhook.payload }}</pre>
+                    </div>
+                    <div>
+                        <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Response</div>
+                        <pre class="bg-gray-900 text-blue-400 rounded-lg p-3 text-xs overflow-x-auto">{{ webhook.response }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- n8n Workflow Example -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Example n8n Workflow: Slack → Exocortex</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">
+            This workflow automatically ingests Slack messages into Exocortex for later retrieval.
+        </p>
+        
+        <!-- Visual Workflow -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+            <div class="flex items-center justify-center gap-4 flex-wrap">
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-purple-500 rounded-lg flex items-center justify-center text-white text-2xl">💬</div>
+                    <span class="text-sm mt-2 text-gray-600 dark:text-gray-400">Slack Trigger</span>
+                </div>
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center text-white text-2xl">📤</div>
+                    <span class="text-sm mt-2 text-gray-600 dark:text-gray-400">HTTP Request</span>
+                </div>
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white text-2xl">🧠</div>
+                    <span class="text-sm mt-2 text-gray-600 dark:text-gray-400">Exocortex</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Workflow JSON</span>
+            <button onclick="copyWorkflow()" class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                Copy JSON
+            </button>
+        </div>
+        <pre id="workflow-json" class="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs overflow-x-auto">{{ n8n_workflow_example }}</pre>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Test Endpoints</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="testIngest()" class="p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg text-left hover:bg-green-100 dark:hover:bg-green-900/50 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📥</span>
+                    <div>
+                        <div class="font-medium text-green-900 dark:text-green-100">Test Ingest</div>
+                        <div class="text-sm text-green-700 dark:text-green-300">Send a test document</div>
+                    </div>
+                </div>
+            </button>
+            <button onclick="testQuery()" class="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg text-left hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🔍</span>
+                    <div>
+                        <div class="font-medium text-blue-900 dark:text-blue-100">Test Query</div>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">Send a test query</div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyWorkflow() {
+    const json = document.getElementById('workflow-json').textContent;
+    navigator.clipboard.writeText(json);
+    alert('Workflow JSON copied to clipboard!');
+}
+
+function testIngest() {
+    alert('Open your browser console and run:\n\nfetch("{{ api_base }}/ingest", {\n  method: "POST",\n  headers: {"Content-Type": "application/json"},\n  body: JSON.stringify({content: "Test from n8n page", source: "admin-test"})\n}).then(r => r.json()).then(console.log)');
+}
+
+function testQuery() {
+    alert('Open your browser console and run:\n\nfetch("{{ api_base }}/query", {\n  method: "POST",\n  headers: {"Content-Type": "application/json"},\n  body: JSON.stringify({query: "What do you know?", top_k: 3})\n}).then(r => r.json()).then(console.log)');
+}
+</script>
+{% endblock %}
