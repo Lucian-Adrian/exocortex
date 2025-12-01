@@ -4,6 +4,8 @@ Store pipeline step.
 Persists Memory objects to the database.
 """
 
+from uuid import UUID
+
 from supabase import Client
 
 from exo.db.queries import insert_memory
@@ -29,34 +31,23 @@ async def store(
         Memory with ID populated, or ExoError on failure.
     """
     try:
-        result = await insert_memory(client, memory)
-        
-        if result.error:
-            return ExoError(
-                code=ErrorCode.STORE_ERROR,
-                message=f"Database error: {result.error}",
-                details={"db_error": result.error},
-                recoverable=True,
-            )
+        # insert_memory returns the UUID as a string
+        memory_id = await insert_memory(client, memory)
         
         # Return memory with ID from database
-        if result.data and isinstance(result.data, list) and len(result.data) > 0:
-            db_record = result.data[0]
-            return Memory(
-                id=db_record.get("id"),
-                content=memory.content,
-                intents=memory.intents,
-                entities=memory.entities,
-                commitments=memory.commitments,
-                summary=memory.summary,
-                embedding=memory.embedding,
-                source_type=memory.source_type,
-                source_file=memory.source_file,
-                created_at=memory.created_at,
-            )
-        
-        # Fallback if no data returned (shouldn't happen)
-        return memory
+        return Memory(
+            id=UUID(memory_id) if isinstance(memory_id, str) else memory_id,
+            content=memory.content,
+            intents=memory.intents,
+            entities=memory.entities,
+            commitments=memory.commitments,
+            summary=memory.summary,
+            embedding=memory.embedding,
+            source_type=memory.source_type,
+            source_file=memory.source_file,
+            content_hash=memory.content_hash,
+            created_at=memory.created_at,
+        )
         
     except Exception as e:
         return ExoError(
