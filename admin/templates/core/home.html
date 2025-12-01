@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block breadcrumb_items %}
+<li><span class="text-gray-500">Dashboard</span></li>
+{% endblock %}
+
+{% block page_content %}
+<div class="space-y-6">
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Memories -->
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm font-medium">Total Memories</p>
+                    <p class="text-3xl font-bold">{{ stats.total_memories|default:0|intcomma }}</p>
+                    <p class="text-purple-200 text-sm mt-1">+{{ stats.memories_today|default:0 }} today</p>
+                </div>
+                <span class="material-symbols-outlined text-4xl text-purple-200">psychology</span>
+            </div>
+        </div>
+        
+        <!-- Open Commitments -->
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium">Open Commitments</p>
+                    <p class="text-3xl font-bold">{{ stats.open_commitments|default:0 }}</p>
+                    <p class="text-blue-200 text-sm mt-1">{{ stats.overdue_commitments|default:0 }} overdue</p>
+                </div>
+                <span class="material-symbols-outlined text-4xl text-blue-200">task_alt</span>
+            </div>
+        </div>
+        
+        <!-- Queries Today -->
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm font-medium">Queries Today</p>
+                    <p class="text-3xl font-bold">{{ stats.queries_today|default:0 }}</p>
+                    <p class="text-green-200 text-sm mt-1">Knowledge searches</p>
+                </div>
+                <span class="material-symbols-outlined text-4xl text-green-200">search</span>
+            </div>
+        </div>
+        
+        <!-- Errors (24h) -->
+        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-red-100 text-sm font-medium">Errors (24h)</p>
+                    <p class="text-3xl font-bold">{{ stats.errors_24h|default:0 }}</p>
+                    <p class="text-red-200 text-sm mt-1"><a href="{% url 'errors' %}" class="underline">View logs</a></p>
+                </div>
+                <span class="material-symbols-outlined text-4xl text-red-200">error</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'ingest:page' %}" class="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <span class="material-symbols-outlined text-3xl text-purple-500 mr-4">upload_file</span>
+            <div>
+                <h3 class="font-semibold text-gray-800 dark:text-white">Ingest Content</h3>
+                <p class="text-sm text-gray-500">Add new memories to your knowledge base</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'query:page' %}" class="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <span class="material-symbols-outlined text-3xl text-blue-500 mr-4">search</span>
+            <div>
+                <h3 class="font-semibold text-gray-800 dark:text-white">Query Knowledge</h3>
+                <p class="text-sm text-gray-500">Search and ask questions</p>
+            </div>
+        </a>
+        
+        <a href="{% url 'commitments:list' %}?status=open" class="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <span class="material-symbols-outlined text-3xl text-green-500 mr-4">task_alt</span>
+            <div>
+                <h3 class="font-semibold text-gray-800 dark:text-white">View Commitments</h3>
+                <p class="text-sm text-gray-500">Track your promises and tasks</p>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Activity & Source Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Memories -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                <span class="material-symbols-outlined mr-2">schedule</span>
+                Recent Memories
+            </h2>
+            {% if stats.recent_memories %}
+            <ul class="space-y-3">
+                {% for memory in stats.recent_memories %}
+                <li class="flex items-start">
+                    <span class="material-symbols-outlined text-gray-400 mr-2 mt-1 text-sm">circle</span>
+                    <div class="flex-1">
+                        <a href="{% url 'memories:detail' memory.id %}" class="text-gray-700 dark:text-gray-300 hover:text-purple-500 line-clamp-2">
+                            {{ memory.summary|default:"No summary"|truncatewords:20 }}
+                        </a>
+                        <p class="text-xs text-gray-400 mt-1">
+                            <span class="inline-block px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">{{ memory.source_type }}</span>
+                            · {{ memory.created_at|date:"M d, H:i" }}
+                        </p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-500">No memories yet. <a href="{% url 'ingest:page' %}" class="text-purple-500 hover:underline">Ingest some content</a> to get started.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Source Distribution -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                <span class="material-symbols-outlined mr-2">pie_chart</span>
+                Source Distribution
+            </h2>
+            {% if stats.source_distribution %}
+            <div class="space-y-3">
+                {% for source_type, count in stats.source_distribution.items %}
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-700 dark:text-gray-300 capitalize">{{ source_type }}</span>
+                        <span class="text-gray-500">{{ count }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div class="bg-purple-500 h-2 rounded-full" style="width: {% widthratio count stats.total_memories 100 %}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No data yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
