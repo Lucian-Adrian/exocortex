@@ -1,0 +1,124 @@
+{% extends "layouts/main.html" %}
+{% load humanize %}
+
+{% block page_title %}Memories{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-gray-400 mx-2">/</span>
+<span class="text-gray-500">Memories</span>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with actions -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+            <span class="material-symbols-outlined mr-2 text-purple-500">psychology</span>
+            Memories
+        </h1>
+        <div class="flex gap-2">
+            <a href="{% url 'ingest:page' %}" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center">
+                <span class="material-symbols-outlined mr-1">add</span> Ingest New
+            </a>
+            <a href="{% url 'memories:export' %}" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center">
+                <span class="material-symbols-outlined mr-1">download</span> Export
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+                <input type="text" name="search" value="{{ current_search }}" 
+                       placeholder="Search content..."
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Type</label>
+                <select name="source_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="">All Sources</option>
+                    {% for st in source_types %}
+                    <option value="{{ st }}" {% if st == current_source_type %}selected{% endif %}>{{ st|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order By</label>
+                <select name="ordering" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="-created_at" {% if current_ordering == "-created_at" %}selected{% endif %}>Newest First</option>
+                    <option value="created_at" {% if current_ordering == "created_at" %}selected{% endif %}>Oldest First</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Memories List -->
+    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-800">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Summary</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Source</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Intents</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                {% for memory in memories %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td class="px-6 py-4">
+                        <a href="{% url 'memories:detail' memory.id %}" class="text-gray-900 dark:text-white hover:text-purple-500 font-medium">
+                            {{ memory.summary|default:"No summary"|truncatewords:15 }}
+                        </a>
+                        {% if memory.commitments %}
+                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            {{ memory.commitments|length }} commitment{{ memory.commitments|length|pluralize }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            {{ memory.source_type }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {% for intent in memory.intents|slice:":3" %}
+                        <span class="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-xs mr-1">{{ intent }}</span>
+                        {% empty %}
+                        -
+                        {% endfor %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {{ memory.created_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td class="px-6 py-4 text-right text-sm font-medium">
+                        <a href="{% url 'memories:detail' memory.id %}" class="text-blue-500 hover:text-blue-700 mr-3">View</a>
+                        <form method="post" action="{% url 'memories:delete' memory.id %}" class="inline" onsubmit="return confirm('Delete this memory?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-500 hover:text-red-700">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">psychology</span>
+                        No memories found. <a href="{% url 'ingest:page' %}" class="text-purple-500 hover:underline">Ingest some content</a> to get started.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <p class="text-sm text-gray-500">Showing {{ memories|length }} memories</p>
+</div>
+{% endblock %}
