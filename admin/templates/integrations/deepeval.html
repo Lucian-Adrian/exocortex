@@ -1,0 +1,171 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}DeepEval Testing - Exocortex Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">🧪 DeepEval Testing</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Unit testing and evaluation for LLM outputs</p>
+        </div>
+        <a href="https://docs.confident-ai.com/docs/getting-started" target="_blank" 
+           class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            DeepEval Docs
+        </a>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Testing Capabilities</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% for feature in features %}
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                <div class="text-3xl mb-2">{{ feature.icon }}</div>
+                <h3 class="font-medium text-purple-900 dark:text-purple-100">{{ feature.name }}</h3>
+                <p class="text-sm text-purple-700 dark:text-purple-300 mt-1">{{ feature.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Test Code Example -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Example Test Code</h2>
+            <button onclick="copyTestCode()" class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                Copy Code
+            </button>
+        </div>
+        <pre id="test-code" class="bg-gray-900 text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ test_code }}</pre>
+    </div>
+
+    <!-- Metrics Explanation -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">RAG Metrics Explained</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 border border-green-200 dark:border-green-700">
+                    <h3 class="font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+                        <span class="text-xl">✅</span> Faithfulness
+                    </h3>
+                    <p class="text-sm text-green-700 dark:text-green-300 mt-2">
+                        Measures whether the answer is grounded in the retrieved context. 
+                        High faithfulness = No hallucination. The model only says things it found in the documents.
+                    </p>
+                    <div class="mt-2 text-xs text-green-600 dark:text-green-400">
+                        Score: 0.0 (hallucinating) to 1.0 (fully grounded)
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                    <h3 class="font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                        <span class="text-xl">🎯</span> Answer Relevancy
+                    </h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                        Measures how relevant the answer is to the original question. 
+                        Does the response actually address what was asked?
+                    </p>
+                    <div class="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                        Score: 0.0 (off-topic) to 1.0 (perfectly relevant)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-4 border border-yellow-200 dark:border-yellow-700">
+                    <h3 class="font-medium text-yellow-900 dark:text-yellow-100 flex items-center gap-2">
+                        <span class="text-xl">📚</span> Contextual Recall
+                    </h3>
+                    <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
+                        Measures whether the retrieval found all relevant documents.
+                        Did we retrieve everything we needed to answer the question?
+                    </p>
+                    <div class="mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                        Score: 0.0 (missing docs) to 1.0 (found all relevant)
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                    <h3 class="font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+                        <span class="text-xl">🔬</span> Contextual Precision
+                    </h3>
+                    <p class="text-sm text-purple-700 dark:text-purple-300 mt-2">
+                        Measures whether retrieved documents are actually relevant.
+                        Did we retrieve only what we needed, without noise?
+                    </p>
+                    <div class="mt-2 text-xs text-purple-600 dark:text-purple-400">
+                        Score: 0.0 (lots of noise) to 1.0 (all relevant)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Run Tests Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Running Tests</h2>
+        <div class="space-y-4">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Install DeepEval</div>
+                <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-sm">pip install deepeval</pre>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Run Tests</div>
+                <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-sm">deepeval test run tests/test_rag.py</pre>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Run with Dashboard</div>
+                <pre class="bg-gray-900 text-green-400 rounded-lg p-3 text-sm">deepeval test run tests/test_rag.py --confident</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Scenarios -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recommended Test Scenarios</h2>
+        <div class="space-y-3">
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span class="text-2xl">📋</span>
+                <div>
+                    <div class="font-medium text-gray-900 dark:text-white">Commitment Extraction</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Test that deadlines and tasks are correctly identified</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span class="text-2xl">🔍</span>
+                <div>
+                    <div class="font-medium text-gray-900 dark:text-white">Semantic Search Quality</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Test that relevant documents are retrieved for queries</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span class="text-2xl">📝</span>
+                <div>
+                    <div class="font-medium text-gray-900 dark:text-white">Summarization Accuracy</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Test that summaries capture key information</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span class="text-2xl">🏷️</span>
+                <div>
+                    <div class="font-medium text-gray-900 dark:text-white">Entity Extraction</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Test that people, dates, and topics are correctly extracted</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyTestCode() {
+    const code = document.getElementById('test-code').textContent;
+    navigator.clipboard.writeText(code);
+    alert('Test code copied to clipboard!');
+}
+</script>
+{% endblock %}
