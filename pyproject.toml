@@ -28,6 +28,12 @@ cli = ["click>=8.0"]
 api = ["fastapi>=0.115", "uvicorn>=0.32"]
 langchain = ["langchain-core>=0.3"]
 llmops = ["langfuse>=2.0", "deepeval>=1.0"]
+admin = [
+    "django>=5.0",
+    "django-unfold>=0.40",
+    "whitenoise>=6.7",
+    "python-dotenv>=1.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
@@ -40,6 +46,7 @@ all = [
     "exo-brain[api]",
     "exo-brain[langchain]",
     "exo-brain[llmops]",
+    "exo-brain[admin]",
     "exo-brain[dev]",
 ]
 
