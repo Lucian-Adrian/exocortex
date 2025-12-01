@@ -1,0 +1,182 @@
+{% extends "layouts/main.html" %}
+
+{% block title %}Langfuse Observability - Exocortex Admin{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">📊 Langfuse Observability</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">LLMOps monitoring, tracing, and analytics</p>
+        </div>
+        <a href="{{ langfuse_url }}" target="_blank" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            Open Langfuse
+        </a>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Connection Status</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm text-gray-500 dark:text-gray-400">Langfuse Host</div>
+                <div class="font-mono text-sm text-gray-900 dark:text-white mt-1">{{ langfuse_url }}</div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm text-gray-500 dark:text-gray-400">Public Key</div>
+                <div class="font-mono text-sm text-gray-900 dark:text-white mt-1">{{ public_key }}</div>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="text-sm text-gray-500 dark:text-gray-400">Secret Key</div>
+                <div class="font-mono text-sm text-gray-900 dark:text-white mt-1">{{ secret_key }}</div>
+            </div>
+        </div>
+        
+        {% if 'Not configured' in public_key or 'Not configured' in secret_key %}
+        <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <div class="font-medium text-yellow-800 dark:text-yellow-200">Langfuse not configured</div>
+                    <div class="text-sm text-yellow-700 dark:text-yellow-300">Add LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY to your .env file</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Features Grid -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Features</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for feature in features %}
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+                <div class="text-3xl mb-2">{{ feature.icon }}</div>
+                <h3 class="font-medium text-gray-900 dark:text-white">{{ feature.name }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ feature.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Metrics Preview -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Metrics Overview</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for metric in metrics %}
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                <div class="text-2xl font-bold text-blue-900 dark:text-blue-100">{{ metric.value }}</div>
+                <div class="text-sm text-blue-700 dark:text-blue-300">{{ metric.name }}</div>
+                <div class="text-xs text-blue-500 dark:text-blue-400 mt-1">{{ metric.trend }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-4 text-center">
+            Connect to Langfuse to see live metrics from your LLM operations
+        </p>
+    </div>
+
+    <!-- Setup Code -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Setup & Integration</h2>
+            <button onclick="copySetupCode()" class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                Copy Code
+            </button>
+        </div>
+        <pre id="setup-code" class="bg-gray-900 text-gray-100 rounded-lg p-4 text-sm overflow-x-auto">{{ setup_code }}</pre>
+    </div>
+
+    <!-- What You Can Track -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">What Gets Tracked</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+                <h3 class="font-medium text-gray-900 dark:text-white">Every LLM Call Records:</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Input prompt and output completion
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Token counts (input, output, total)
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Latency and response time
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Model name and configuration
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Estimated cost per call
+                    </li>
+                </ul>
+            </div>
+            <div class="space-y-3">
+                <h3 class="font-medium text-gray-900 dark:text-white">Session Context:</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        User ID for per-user analytics
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Session ID to group related calls
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Custom metadata tags
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Retrieved documents in RAG
+                    </li>
+                    <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Quality scores and feedback
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySetupCode() {
+    const code = document.getElementById('setup-code').textContent;
+    navigator.clipboard.writeText(code);
+    alert('Setup code copied to clipboard!');
+}
+</script>
+{% endblock %}
