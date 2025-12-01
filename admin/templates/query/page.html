@@ -1,0 +1,214 @@
+{% extends "layouts/main.html" %}
+
+{% block page_title %}Query{% endblock %}
+
+{% block breadcrumbs %}
+<span class="text-gray-400 mx-2">/</span>
+<span class="text-gray-500">Query</span>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+            <span class="material-symbols-outlined mr-2 text-blue-500">search</span>
+            Query Your Memory
+        </h1>
+        <p class="text-gray-500 mt-1">Ask questions about your stored memories using semantic search and RAG.</p>
+    </div>
+
+    <!-- Query Form -->
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <form id="query-form" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Your Question</label>
+                <div class="relative">
+                    <input type="text" name="query" id="query-input" required
+                        placeholder="What was discussed in the meeting about...?"
+                        class="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg">
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-blue-500 hover:text-blue-700">
+                        <span class="material-symbols-outlined">send</span>
+                    </button>
+                </div>
+            </div>
+
+            <div x-data="{ showAdvanced: false }">
+                <button type="button" @click="showAdvanced = !showAdvanced" class="text-sm text-gray-500 hover:text-gray-700 flex items-center">
+                    <span class="material-symbols-outlined text-sm mr-1" x-text="showAdvanced ? 'expand_less' : 'expand_more'"></span>
+                    Advanced Options
+                </button>
+                
+                <div x-show="showAdvanced" class="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Top K Results</label>
+                        <input type="number" name="top_k" value="5" min="1" max="20"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Similarity Threshold</label>
+                        <input type="number" name="threshold" value="0.3" min="0" max="1" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source Filter</label>
+                        <select name="source_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">All Sources</option>
+                            {% for st in source_types %}
+                            <option value="{{ st }}">{{ st|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results-section" class="hidden">
+        <!-- Loading State -->
+        <div id="loading-state" class="hidden text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mx-auto mb-4"></div>
+            <p class="text-gray-500">Searching your memories...</p>
+        </div>
+
+        <!-- Answer -->
+        <div id="answer-section" class="hidden bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
+                <span class="material-symbols-outlined mr-2 text-purple-500">auto_awesome</span>
+                AI Answer
+            </h3>
+            <div id="answer-text" class="text-gray-700 dark:text-gray-300 prose dark:prose-invert max-w-none"></div>
+        </div>
+
+        <!-- Sources -->
+        <div id="sources-section" class="hidden">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                <span class="material-symbols-outlined mr-2 text-blue-500">source</span>
+                Sources
+            </h3>
+            <div id="sources-list" class="space-y-3"></div>
+        </div>
+
+        <!-- Error -->
+        <div id="error-section" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p class="text-red-800 dark:text-red-200" id="error-text"></p>
+        </div>
+    </div>
+
+    <!-- Query History -->
+    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+            <span class="material-symbols-outlined mr-2 text-gray-500">history</span>
+            Recent Queries
+        </h3>
+        <div class="space-y-2" id="query-history">
+            {% for query in recent_queries %}
+            <div class="flex items-center justify-between bg-white dark:bg-gray-900 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 query-history-item" data-query="{{ query.question }}">
+                <div>
+                    <p class="text-gray-800 dark:text-white">{{ query.question|truncatewords:15 }}</p>
+                    <p class="text-sm text-gray-500">{{ query.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                <span class="material-symbols-outlined text-gray-400">arrow_forward</span>
+            </div>
+            {% empty %}
+            <p class="text-gray-500 text-center py-4">No queries yet. Ask something above!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('query-form');
+    const resultsSection = document.getElementById('results-section');
+    const loadingState = document.getElementById('loading-state');
+    const answerSection = document.getElementById('answer-section');
+    const answerText = document.getElementById('answer-text');
+    const sourcesSection = document.getElementById('sources-section');
+    const sourcesList = document.getElementById('sources-list');
+    const errorSection = document.getElementById('error-section');
+    const errorText = document.getElementById('error-text');
+    const queryInput = document.getElementById('query-input');
+
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const query = formData.get('query');
+        
+        // Show loading
+        resultsSection.classList.remove('hidden');
+        loadingState.classList.remove('hidden');
+        answerSection.classList.add('hidden');
+        sourcesSection.classList.add('hidden');
+        errorSection.classList.add('hidden');
+
+        try {
+            const response = await fetch('{% url "query:api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: JSON.stringify({
+                    question: query,
+                    top_k: parseInt(formData.get('top_k')) || 5,
+                    threshold: parseFloat(formData.get('threshold')) || 0.3,
+                    source_type: formData.get('source_type') || null
+                })
+            });
+
+            const data = await response.json();
+            loadingState.classList.add('hidden');
+
+            if (data.error) {
+                errorSection.classList.remove('hidden');
+                errorText.textContent = data.error;
+            } else {
+                // Show answer
+                if (data.answer) {
+                    answerSection.classList.remove('hidden');
+                    answerText.innerHTML = data.answer.replace(/\n/g, '<br>');
+                }
+
+                // Show sources
+                if (data.sources && data.sources.length > 0) {
+                    sourcesSection.classList.remove('hidden');
+                    sourcesList.innerHTML = data.sources.map((source, i) => `
+                        <div class="bg-white dark:bg-gray-900 rounded-lg p-4 border-l-4 border-purple-500">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-gray-800 dark:text-white font-medium">Memory ${i + 1}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${source.content_preview || ''}</p>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                        ${(source.similarity * 100).toFixed(1)}% match
+                                    </span>
+                                    <a href="/memories/${source.memory_id}/" class="block text-sm text-blue-500 hover:underline mt-1">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            loadingState.classList.add('hidden');
+            errorSection.classList.remove('hidden');
+            errorText.textContent = 'Failed to query: ' + error.message;
+        }
+    });
+
+    // Handle clicking on history items
+    document.querySelectorAll('.query-history-item').forEach(item => {
+        item.addEventListener('click', function() {
+            queryInput.value = this.dataset.query;
+            form.dispatchEvent(new Event('submit'));
+        });
+    });
+});
+</script>
+{% endblock %}
