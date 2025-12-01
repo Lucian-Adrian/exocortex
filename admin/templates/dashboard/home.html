@@ -1,0 +1,356 @@
+{% extends "layouts/main.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Memories -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Memories</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.total_memories|default:0 }}</p>
+                    <p class="text-sm text-green-500 mt-1 flex items-center">
+                        <span class="material-symbols-outlined text-sm">trending_up</span>
+                        +{{ stats.memories_today|default:0 }} today
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-purple-500">psychology</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <a href="{% url 'memories:list' %}" class="text-sm text-brand-500 hover:text-brand-600 font-medium flex items-center">
+                    View all memories <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Open Commitments -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Open Commitments</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.open_commitments|default:0 }}</p>
+                    <p class="text-sm {% if stats.overdue_commitments %}text-red-500{% else %}text-gray-500{% endif %} mt-1 flex items-center">
+                        {% if stats.overdue_commitments %}
+                        <span class="material-symbols-outlined text-sm">warning</span>
+                        {{ stats.overdue_commitments }} overdue
+                        {% else %}
+                        <span class="material-symbols-outlined text-sm">check</span>
+                        All on track
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-emerald-500">task_alt</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <a href="{% url 'commitments:list' %}" class="text-sm text-brand-500 hover:text-brand-600 font-medium flex items-center">
+                    Manage commitments <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Queries Today -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Queries Today</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.queries_today|default:0 }}</p>
+                    <p class="text-sm text-gray-500 mt-1 flex items-center">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        RAG searches
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-blue-500">search</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <a href="{% url 'query:page' %}" class="text-sm text-brand-500 hover:text-brand-600 font-medium flex items-center">
+                    New query <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="stat-card bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">System Health</p>
+                    <p class="text-3xl font-bold {% if stats.errors_24h == 0 %}text-green-500{% else %}text-red-500{% endif %} mt-1">
+                        {% if stats.errors_24h == 0 %}Healthy{% else %}{{ stats.errors_24h }} Errors{% endif %}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1 flex items-center">
+                        <span class="material-symbols-outlined text-sm">timer</span>
+                        Last 24 hours
+                    </p>
+                </div>
+                <div class="w-14 h-14 {% if stats.errors_24h == 0 %}bg-green-100 dark:bg-green-900/30{% else %}bg-red-100 dark:bg-red-900/30{% endif %} rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl {% if stats.errors_24h == 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                        {% if stats.errors_24h == 0 %}check_circle{% else %}error{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <a href="{% url 'errors' %}" class="text-sm text-brand-500 hover:text-brand-600 font-medium flex items-center">
+                    View logs <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <span class="material-symbols-outlined mr-2 text-brand-500">bolt</span>
+            Quick Actions
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <a href="{% url 'ingest:page' %}" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-green-500">upload</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Ingest Text</span>
+            </a>
+            
+            <a href="{% url 'ingest:page' %}?tab=file" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-blue-500">upload_file</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Upload File</span>
+            </a>
+            
+            <a href="{% url 'query:page' %}" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-purple-500">search</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">RAG Query</span>
+            </a>
+            
+            <a href="{% url 'memories:list' %}" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-indigo-500">psychology</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Browse Memories</span>
+            </a>
+            
+            <a href="{% url 'commitments:list' %}?status=open" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-emerald-500">task_alt</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Commitments</span>
+            </a>
+            
+            <a href="{% url 'memories:export' %}" class="action-card flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-transparent hover:border-brand-500">
+                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-2">
+                    <span class="material-symbols-outlined text-2xl text-orange-500">download</span>
+                </div>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Export Data</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Memories -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <span class="material-symbols-outlined mr-2 text-purple-500">schedule</span>
+                    Recent Memories
+                </h3>
+                <a href="{% url 'memories:list' %}" class="text-sm text-brand-500 hover:text-brand-600">View all →</a>
+            </div>
+            <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for memory in stats.recent_memories %}
+                <a href="{% url 'memories:detail' memory.id %}" class="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 dark:text-white line-clamp-1">{{ memory.summary|default:"No summary"|truncatewords:12 }}</p>
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ memory.content|truncatewords:20 }}</p>
+                            <div class="flex items-center mt-2 space-x-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                                    {{ memory.source_type }}
+                                </span>
+                                <span class="text-xs text-gray-400">{{ memory.created_at|date:"M d, H:i" }}</span>
+                                {% if memory.commitments %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                                    {{ memory.commitments|length }} commitment{{ memory.commitments|length|pluralize }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 ml-4">chevron_right</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="p-8 text-center">
+                    <span class="material-symbols-outlined text-5xl text-gray-300 mb-3 block">psychology</span>
+                    <p class="text-gray-500 mb-4">No memories yet</p>
+                    <a href="{% url 'ingest:page' %}" class="inline-flex items-center px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600">
+                        <span class="material-symbols-outlined mr-2">add</span>
+                        Ingest your first memory
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="space-y-6">
+            <!-- Integrations Status -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <span class="material-symbols-outlined mr-2 text-blue-500">extension</span>
+                    Integrations
+                </h3>
+                <div class="space-y-3">
+                    <a href="http://localhost:8000/docs" target="_blank" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="material-symbols-outlined text-indigo-500">api</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white text-sm">REST API</p>
+                                <p class="text-xs text-gray-500">FastAPI @ :8000</p>
+                            </div>
+                        </div>
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    </a>
+                    
+                    <a href="{% url 'integrations:langchain' %}" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="material-symbols-outlined text-orange-500">link</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white text-sm">LangChain</p>
+                                <p class="text-xs text-gray-500">RAG Retriever</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">Docs →</span>
+                    </a>
+                    
+                    <a href="{% url 'integrations:n8n' %}" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="material-symbols-outlined text-pink-500">webhook</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white text-sm">n8n Webhooks</p>
+                                <p class="text-xs text-gray-500">Automation</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500">Setup →</span>
+                    </a>
+                    
+                    <a href="{% url 'integrations:langfuse' %}" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center mr-3">
+                                <span class="material-symbols-outlined text-cyan-500">visibility</span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white text-sm">Langfuse</p>
+                                <p class="text-xs text-gray-500">LLMOps Tracing</p>
+                            </div>
+                        </div>
+                        <span class="w-2 h-2 {% if langfuse_enabled %}bg-green-500{% else %}bg-gray-300{% endif %} rounded-full"></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CLI Commands -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <span class="material-symbols-outlined mr-2 text-gray-500">terminal</span>
+                    CLI Quick Reference
+                </h3>
+                <div class="space-y-2 text-sm">
+                    <div class="bg-gray-900 rounded-lg p-3">
+                        <code class="text-green-400">exo ingest "your text here"</code>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-3">
+                        <code class="text-green-400">exo ingest --file notes.md</code>
+                    </div>
+                    <div class="bg-gray-900 rounded-lg p-3">
+                        <code class="text-green-400">exo query "your question"</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Distribution -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <span class="material-symbols-outlined mr-2 text-indigo-500">pie_chart</span>
+                    Sources
+                </h3>
+                {% if stats.source_distribution %}
+                <div class="space-y-3">
+                    {% for source_type, count in stats.source_distribution.items %}
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-700 dark:text-gray-300 capitalize">{{ source_type }}</span>
+                            <span class="text-gray-500">{{ count }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-brand-500 h-2 rounded-full" style="width: {% widthratio count stats.total_memories 100 %}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm text-center py-4">No data yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- API Endpoints Reference -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <span class="material-symbols-outlined mr-2 text-indigo-500">api</span>
+            API Endpoints
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-mono rounded mr-2">POST</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">/api/memories</span>
+                </div>
+                <p class="text-xs text-gray-500">Ingest new content</p>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono rounded mr-2">GET</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">/api/memories</span>
+                </div>
+                <p class="text-xs text-gray-500">List all memories</p>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-mono rounded mr-2">POST</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">/api/query</span>
+                </div>
+                <p class="text-xs text-gray-500">RAG query endpoint</p>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-mono rounded mr-2">GET</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">/api/commitments</span>
+                </div>
+                <p class="text-xs text-gray-500">List commitments</p>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <a href="http://localhost:8000/docs" target="_blank" class="text-sm text-brand-500 hover:text-brand-600 flex items-center">
+                Open full API documentation <span class="material-symbols-outlined text-sm ml-1">open_in_new</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
