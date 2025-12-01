@@ -62,23 +62,13 @@ async def query(
             )
         
         # Step 2: Semantic search
-        search_result = await search_semantic(
+        memories = await search_semantic(
             client,
             embedding=question_embedding,
-            top_k=request.top_k,
-            threshold=request.similarity_threshold,
-            filters=request.filters if request.filters else None,
+            match_threshold=request.similarity_threshold,
+            match_count=request.top_k,
+            filter_source_type=request.filters.get("source_type") if request.filters else None,
         )
-        
-        if search_result.error:
-            return ExoError(
-                code=ErrorCode.QUERY_ERROR,
-                message=f"Search failed: {search_result.error}",
-                details={"db_error": search_result.error},
-                recoverable=True,
-            )
-        
-        memories = search_result.data or []
         
         # Build context from retrieved memories
         context: list[str] = []
